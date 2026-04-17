@@ -10,6 +10,26 @@ share institutional memory.
 > commands, edit them, and design your own memory kinds and anchor
 > namespaces. `/mem-onboard` will walk you through it.
 
+## Fast path: let Claude Code do it for you
+
+If you already have Claude Code installed:
+
+```bash
+git clone https://github.com/KexinLu/mesh-memory-preview.git
+cd mesh-memory-preview
+```
+
+Then open Claude Code in that directory and say:
+
+> run the instructions in `commands/mem-setup.md`
+
+Claude Code will walk you through Docker checks, `.env` setup,
+provisioning an API token, wiring up the MCP bridge, and installing
+the slash commands. Expect to paste the API token into
+`~/.claude.json` once — Claude Code will show you exactly where.
+
+Prefer the manual path? Keep reading.
+
 ## What you need
 
 - Docker + Docker Compose
