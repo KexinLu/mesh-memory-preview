@@ -30,6 +30,22 @@ without duplicating.
    machine. Still — warn the user if they're pointing at a project
    slug other than their own.
 
+# Triage bad entries up front
+
+As you read the corpus, set aside (do **not** write) any entry that
+falls into one of these buckets. Collect them for the final report;
+don't try to guess or fabricate.
+
+- **Missing** — `MEMORY.md` links to a file that doesn't exist on
+  disk. Record the referenced filename + the index line.
+- **Inaccurate** — file exists but is unusable: no frontmatter block,
+  unparseable YAML, missing `name` or `type`, or an empty body.
+  Record the filename + the specific defect.
+
+Everything that passes triage proceeds to Step 1. Do not try to heal
+bad data — the user is the authority on what those entries were
+supposed to be, and silent fixes would make the next re-run drift.
+
 # Step 1 — Propose the taxonomy
 
 Read the whole corpus before writing anything. For each file, note
@@ -124,15 +140,21 @@ Before writing anything, show the user:
 ```
 Import preview (source: ~/.claude/projects/<slug>/memory/)
 
-  NEW     8   (first-time imports)
-  UPDATE  2   (content drifted since last sync)
-  SKIP    5   (already present, unchanged)
+  NEW         8   (first-time imports)
+  UPDATE      2   (content drifted since last sync)
+  SKIP        5   (already present, unchanged)
+  MISSING     1   (indexed in MEMORY.md but file not on disk)
+  INACCURATE  0   (frontmatter unparseable or body empty)
 
   Target tenant:  <tenant_id>
   Target project: <project_id or "<root — no project scope>">
 
 Proceed? [y/n]
 ```
+
+`MISSING` and `INACCURATE` rows are **not** written — they're
+surfaced so the user can fix the source. Show the offending filenames
+inline.
 
 Offer the user a chance to scope the writes to a specific mesh
 project (`mcp__mem-mcp__create_project` if they want a new one) so
@@ -157,11 +179,30 @@ mcp__mem-mcp__write_memory_direct
 Report each write's id as you go. If one fails, stop — don't silently
 leave a half-imported state.
 
-# Step 6 — Verify
+# Step 6 — Verify and report
 
-After writes, recall `anchors: [claude_memory:*]` scoped to the
-target project (if any) and show the count vs. expected. This
-catches the case where the write path silently dropped something.
+After writes, recall memories scoped to the target project (if any)
+and show the count vs. expected. This catches the case where the
+write path silently dropped something.
+
+Then print a final report so the user can fix their source tree:
+
+```
+Import complete.
+
+  Imported (NEW)     8
+  Imported (UPDATE)  2
+  Skipped            5
+  Missing            1
+    - project_role_permissions.md (indexed in MEMORY.md, not on disk)
+  Inaccurate         0
+
+  Target project: mem_import_smoke
+```
+
+Missing and inaccurate entries stay on the user's to-do list — they
+represent real gaps in the source, not in mesh-memory. Do not retry
+them automatically.
 
 Tell the user:
 
