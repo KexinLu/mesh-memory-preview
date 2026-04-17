@@ -13,12 +13,12 @@ before moving on.
 
 - `docker info` — confirm Docker daemon is running.
 - `docker compose version` — confirm Compose v2 is available.
-- Ask the user for the path to their local clone of the
-  `mesh-memory-preview` repo (default:
-  `~/LocalWork/mesh-memory-preview` or whatever the user just
-  cloned). If the directory has no `docker-compose.yml`, stop and
-  tell them to clone it first:
-  `git clone https://github.com/KexinLu/mesh-memory-preview.git`.
+- Locate the local clone of `mesh-memory-preview`. Default:
+  `~/.mesh-memory` (where `BOOTSTRAP.md` puts it). If the user
+  already had their own clone elsewhere, let them point you at it.
+  If no clone exists anywhere, stop and tell them to run the
+  bootstrap (see the repo README) or `git clone
+  https://github.com/KexinLu/mesh-memory-preview.git ~/.mesh-memory`.
 
 All subsequent commands run from inside that directory.
 

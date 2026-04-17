@@ -10,9 +10,19 @@ share institutional memory.
 > commands, edit them, and design your own memory kinds and anchor
 > namespaces. `/mem-onboard` will walk you through it.
 
-## Fast path: let Claude Code do it for you
+## Fastest path — paste this into Claude Code
 
-If you already have Claude Code installed:
+Open Claude Code anywhere (any directory is fine) and paste:
+
+> Install mesh-memory by following the bootstrap at
+> <https://raw.githubusercontent.com/KexinLu/mesh-memory-preview/main/BOOTSTRAP.md>
+
+Claude will clone this repo to `~/.mesh-memory`, walk you through
+Docker checks, `.env` setup, API-token provisioning, and the MCP
+bridge. You'll paste the token + a JSON block into `~/.claude.json`
+once — Claude will show you exactly what to copy. Total time: ~5 min.
+
+## Slower path — manual clone
 
 ```bash
 git clone https://github.com/KexinLu/mesh-memory-preview.git
@@ -23,12 +33,10 @@ Then open Claude Code in that directory and say:
 
 > run the instructions in `commands/mem-setup.md`
 
-Claude Code will walk you through Docker checks, `.env` setup,
-provisioning an API token, wiring up the MCP bridge, and installing
-the slash commands. Expect to paste the API token into
-`~/.claude.json` once — Claude Code will show you exactly where.
+Everything else is the same as the fastest path — this version just
+lets you pick the clone location.
 
-Prefer the manual path? Keep reading.
+Prefer zero automation? Keep reading for the full manual install.
 
 ## What you need
 
