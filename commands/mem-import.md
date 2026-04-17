@@ -96,15 +96,20 @@ For each proposed write, recall against the stable anchor:
 ```
 mcp__mem-mcp__recall
   anchors: [claude_memory:<slug>]
-  limit:   1
+  limit:   20
 ```
 
-Classify the outcome:
+Recall returns the **whole supersedes chain** for that slug, not just
+the current entry. Pick the row with `supersededBy == null` — that's
+the current version. Ignore rows with a non-null `supersededBy`;
+they're historical.
 
-- **No match** → NEW write.
-- **Match, content identical** → SKIP (report "unchanged").
-- **Match, content differs** → UPDATE. The new write gets
-  `supersedes: <the matched memory's id>`, and the stable
+Classify the outcome against the *current* row:
+
+- **No current row** (empty recall) → NEW write.
+- **Current row, content identical** → SKIP (report "unchanged").
+- **Current row, content differs** → UPDATE. The new write gets
+  `supersedes: <the current row's id>`, and the stable
   `claude_memory:<slug>` anchor carries forward so the next re-run
   finds the latest version.
 
