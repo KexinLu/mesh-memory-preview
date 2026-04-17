@@ -1,0 +1,42 @@
+# mesh-memory — teammate distribution
+# 1. Copy this file and .env.example to a directory
+# 2. cp .env.example .env && edit .env
+# 3. docker compose up -d
+# 4. docker compose exec mesh-server /mesh-server provision-key --label my-key --role architect
+# 5. Copy the token into your Claude Code MCP config
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: mesh
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mesh}
+      POSTGRES_DB: mesh
+    ports:
+      - "${PG_PORT:-5444}:5432"
+    volumes:
+      - mesh-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mesh -d mesh"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mesh-server:
+    image: kexinlu/mesh-memory:server-latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${MESH_PORT:-9080}:9080"
+    environment:
+      DATABASE_URL: postgres://mesh:${POSTGRES_PASSWORD:-mesh}@postgres:5432/mesh
+      SERVER_BIND: 0.0.0.0:9080
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_MODEL: ${LLM_MODEL:-qwen-plus}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      DASHSCOPE_BASE_URL: ${DASHSCOPE_BASE_URL:-}
+      RUST_LOG: ${RUST_LOG:-info}
+
+volumes:
+  mesh-pgdata:
