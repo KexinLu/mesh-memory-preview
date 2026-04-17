@@ -185,24 +185,34 @@ After writes, recall memories scoped to the target project (if any)
 and show the count vs. expected. This catches the case where the
 write path silently dropped something.
 
-Then print a final report so the user can fix their source tree:
+Then print a final report so the user has a record of every decision
+and can fix their source tree:
 
 ```
-Import complete.
+Import complete — target project: mem_import_smoke
 
-  Imported (NEW)     8
-  Imported (UPDATE)  2
-  Skipped            5
-  Missing            1
-    - project_role_permissions.md (indexed in MEMORY.md, not on disk)
-  Inaccurate         0
+NEW (2):
+  user_collaboration_style.md       → practice / L3    id 019d9cd1-f59e…
+  project_session_2026_04_16.md     → tribal   / L3    id 019d9cd2-50df…
 
-  Target project: mem_import_smoke
+UPDATE (1):
+  auth_migration_notes.md           → decision / L3    id 019d9cd3-aa11…
+                                                       supersedes 019d9cc0-…
+
+SKIP (5):
+  old_finding_1.md                  (unchanged since last sync)
+  …
+
+MISSING (1):
+  project_role_permissions.md       (indexed in MEMORY.md, not on disk)
+
+INACCURATE (0):
 ```
 
-Missing and inaccurate entries stay on the user's to-do list — they
-represent real gaps in the source, not in mesh-memory. Do not retry
-them automatically.
+One row per source file so the mapping (kind, lane, new memory id)
+is auditable. Missing and inaccurate entries stay on the user's
+to-do list — they represent real gaps in the source, not in
+mesh-memory. Do not retry them automatically.
 
 Tell the user:
 
