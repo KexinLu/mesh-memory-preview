@@ -33,11 +33,12 @@ Prefer the manual path? Keep reading.
 ## What you need
 
 - Docker + Docker Compose
-- **An LLM API key** — see below (required for any real use)
 - Claude Code with MCP support
+- **Either** an LLM API key (for classifier-backed mode) **or** nothing
+  extra (for agent-as-gate mode) — see "About the LLM provider" below
 - 5 minutes
 
-## About the LLM key
+## About the LLM provider
 
 Two supported shapes — pick one:
 
