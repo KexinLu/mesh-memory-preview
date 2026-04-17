@@ -1,3 +1,11 @@
+Template — customize for your team's workflow. This starter uses a
+generic kind/lane/anchor heuristic. Once you've run `/mem-onboard`
+and registered *your* taxonomy, edit this file: teach it which kinds
+your team actually writes, which anchor namespaces to always attach,
+and which lane each handoff typically lands in.
+
+---
+
 Write a memory to mesh-memory about whatever the user just discussed or is currently working on.
 
 Steps:

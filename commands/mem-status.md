@@ -1,3 +1,9 @@
+Template — customize for your team's deployment. If the server runs
+somewhere other than `localhost:9080` or containers are named
+differently, update the checks below.
+
+---
+
 Check the health of the mesh-memory stack.
 
 1. Check if containers are running: `docker ps --filter name=mesh --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"`

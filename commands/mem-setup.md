@@ -1,3 +1,10 @@
+Template — customize for your team's deployment. This starter assumes
+local Docker + `~/.config/mesh-memory/`. If your team runs a shared
+mesh-server, uses a non-Docker runtime, or keeps config elsewhere,
+rewrite these steps.
+
+---
+
 Set up mesh-memory for this machine. Follow these steps in order:
 
 1. Check if Docker is running: `docker info`

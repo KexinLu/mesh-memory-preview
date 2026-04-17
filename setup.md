@@ -1,14 +1,46 @@
-# mesh-memory setup guide
+# mesh-memory setup
 
-## What you get
+A shared memory substrate for your dev team's AI agents. Stores decisions,
+patterns, tribal knowledge, and working context so Claude Code sessions
+share institutional memory.
 
-mesh-memory is a shared memory substrate for your dev team's AI agents. It stores decisions, patterns, tribal knowledge, and working context so Claude Code sessions share institutional memory.
+> **This kit is a starting point, not a product.** The slash commands
+> and the reference taxonomy describe how *we* think about team memory.
+> Your team's handoffs are different — you are expected to read the
+> commands, edit them, and design your own memory kinds and anchor
+> namespaces. `/mem-onboard` will walk you through it.
 
-## Quick start
+## What you need
 
-### 1. Get the files
+- Docker + Docker Compose
+- **An LLM API key** — see below (required for any real use)
+- Claude Code with MCP support
+- 5 minutes
 
-You need two files — `docker-compose.yml` and `.env.example`. Place them in `~/.config/mesh-memory/`:
+## About the LLM key (required)
+
+Every `write_memory` call routes through an LLM that classifies the note
+(kind, lane, anchors, decay). Without a working provider, writes can't
+be classified.
+
+Supported providers (any OpenAI-compatible endpoint works):
+
+| Provider | Where to get a key | Base URL |
+|---|---|---|
+| DashScope (Qwen, default) | <https://dashscope.console.aliyun.com/> | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
+| OpenAI | <https://platform.openai.com/> | `https://api.openai.com/v1` |
+| Ollama (local) | run `ollama serve` locally | `http://host.docker.internal:11434/v1` |
+| vLLM (local) | run `vllm serve …` locally | `http://host.docker.internal:8000/v1` |
+
+> `LLM_PROVIDER=mock` exists **for mesh-memory's own development only** —
+> it returns dummy classifications. Do not run a team on it.
+
+## Install
+
+### 1. Get the kit
+
+You need `docker-compose.yml` and `.env.example`. Drop them somewhere
+stable:
 
 ```bash
 mkdir -p ~/.config/mesh-memory
@@ -19,35 +51,36 @@ cp .env.example .env
 
 ### 2. Configure
 
-Edit `~/.config/mesh-memory/.env`:
+Edit `~/.config/mesh-memory/.env` and set at minimum:
 
 ```bash
-# Required: pick your LLM provider
-LLM_PROVIDER=qwen
-DASHSCOPE_API_KEY=sk-your-key-here
-
-# Or use mock mode (no LLM needed, good for testing)
-LLM_PROVIDER=mock
+LLM_PROVIDER=qwen               # or openai / ollama / vllm
+LLM_MODEL=qwen-plus             # any model your provider serves
+DASHSCOPE_API_KEY=sk-…          # your key
+# DASHSCOPE_BASE_URL=…          # override if not using DashScope
 ```
 
 ### 3. Start the stack
 
 ```bash
-cd ~/.config/mesh-memory
 docker compose up -d
+docker compose ps               # both services should be healthy
 ```
 
-### 4. Provision an API key
+### 4. Mint an API token
 
 ```bash
-docker compose exec mesh-server /mesh-server provision-key --label my-key --role architect
+docker compose exec mesh-server \
+    /mesh-server provision-key --label my-laptop --role architect
 ```
 
-Save the printed token — you cannot recover it later.
+Copy the printed token — **it is not recoverable**. Roles today are
+coarse (`architect`, `lead`, `worker`); pick `architect` for a personal
+key.
 
-### 5. Configure Claude Code
+### 5. Wire the MCP bridge into Claude Code
 
-Add the MCP bridge to `~/.claude.json`:
+Add to `~/.claude.json`:
 
 ```json
 {
@@ -57,7 +90,7 @@ Add the MCP bridge to `~/.claude.json`:
       "args": [
         "run", "--rm", "-i", "--network", "host",
         "-e", "MESH_API_URL=http://127.0.0.1:9080/graphql",
-        "-e", "MESH_API_TOKEN=YOUR_TOKEN_HERE",
+        "-e", "MESH_API_TOKEN=PASTE_TOKEN_HERE",
         "kexinlu/mesh-memory:mcp-latest"
       ]
     }
@@ -65,35 +98,80 @@ Add the MCP bridge to `~/.claude.json`:
 }
 ```
 
-Replace `YOUR_TOKEN_HERE` with the token from step 4.
-
-### 6. Install slash commands
-
-Copy the commands to your Claude Code commands directory:
+### 6. Install the starter slash commands
 
 ```bash
 cp commands/mem-*.md ~/.claude/commands/
 ```
 
-This gives you: `/mem-setup`, `/mem-recall`, `/mem-this`, `/mem-status`.
+You get `/mem-onboard`, `/mem-setup`, `/mem-recall`, `/mem-this`,
+`/mem-status`. **These are templates.** See "Customize the commands"
+below.
 
 ### 7. Restart Claude Code
 
-Restart your Claude Code session so it picks up the new MCP server.
+So the new MCP server and commands get picked up.
 
 ### 8. Verify
 
-In Claude Code, type `/mem-status` or just say "mem recall" to check the connection.
+```text
+/mem-status
+```
+
+You should see containers up, server healthy, MCP connected, `0` memories.
+
+## Design your taxonomy
+
+mesh-memory ships empty. You decide what lives in it.
+
+There are two registries you populate once per tenant:
+
+- **Memory kinds** — the categories (`decision`, `pattern`, `finding`,
+  `blocker`, …). Define what's worth recording and how long it should
+  live.
+- **Anchor namespaces** — how memories are indexed and found
+  (`topic:*`, `workstream:*`, `gh:issue/###`, …). Anchors are how recall
+  finds the right memory without full-text fishing.
+
+Our reference shape for a foreman/worker dev team lives at
+[`docs/memory-kinds/multi-agent-dev-team.md`](../docs/memory-kinds/multi-agent-dev-team.md).
+It is an example, not a schema. A solo IC, a research team, or a
+support rotation would each want a different shape.
+
+**Easiest path:** in Claude Code, run `/mem-onboard`. It reads the
+reference doc, interviews you about your team's handoff patterns, and
+calls `create_memory_kind` + `create_anchor_namespace` for you.
+
+**Manual path:** call the MCP tools yourself
+(`create_memory_kind`, `create_anchor_namespace`). See
+`list_memory_kinds` and `list_anchor_namespaces` to inspect current
+state.
+
+## Customize the commands
+
+Open `~/.claude/commands/mem-*.md` and edit them. The shipped versions
+describe *our* intended workflow — yours will differ. Examples:
+
+- If your team uses a `spinoff` kind, teach `/mem-this` to suggest it
+  when the note smells like a sidequest.
+- If you always anchor to `gh:issue/###`, hard-code that lookup into
+  `/mem-this` so recall stays consistent.
+- If you don't run a foreman/worker split, rewrite `/mem-recall` to
+  group by whatever roles *your* team actually has.
+
+The commands are prompts, not code. You don't need to know Rust to
+change them.
 
 ## Add to your project's CLAUDE.md
 
-Paste this snippet into your project's CLAUDE.md so Claude Code knows how to use mesh-memory:
+Paste into each project that should use mesh-memory, so Claude Code
+reaches for the tools automatically:
 
 ```markdown
 ## Memory (mesh-memory)
 
-This project uses mesh-memory for shared team knowledge. When the user says
-"mem this", "remember this", or asks to store something, use the
+This project uses mesh-memory for shared team knowledge. When the user
+says "mem this", "remember this", or asks to store something, use the
 `mcp__mem-mcp__*` tools.
 
 Workflow:
@@ -105,6 +183,14 @@ Workflow:
 
 ## Troubleshooting
 
-- **"graphql response decode" error**: Token is invalid. Re-provision with `provision-key`.
-- **Connection refused**: Check `docker compose ps` — is mesh-server running?
-- **MCP tools not showing**: Restart Claude Code session after editing `~/.claude.json`.
+- **"classification error" on write** — LLM provider isn't reachable.
+  Check `DASHSCOPE_API_KEY` and `DASHSCOPE_BASE_URL` in `.env`, then
+  `docker compose restart mesh-server`.
+- **"graphql response decode" error** — token is invalid. Re-provision
+  with `provision-key`.
+- **Connection refused** — `docker compose ps`; is `mesh-server`
+  running and healthy?
+- **MCP tools not showing** — restart Claude Code after editing
+  `~/.claude.json`.
+- **Writes succeed but recall finds nothing** — your kinds registry is
+  empty. Run `/mem-onboard`.
