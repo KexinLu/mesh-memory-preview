@@ -129,8 +129,8 @@ cp commands/mem-*.md ~/.claude/commands/
 ```
 
 You get `/mem-onboard`, `/mem-setup`, `/mem-recall`, `/mem-this`,
-`/mem-rollup`, `/mem-status`. **These are templates.** See "Customize
-the commands" below.
+`/mem-rollup`, `/mem-import`, `/mem-status`. **These are templates.**
+See "Customize the commands" below.
 
 ### 7. Restart Claude Code
 
