@@ -115,7 +115,7 @@ Add to `~/.claude.json`:
         "run", "--rm", "-i", "--network", "host",
         "-e", "MESH_API_URL=http://127.0.0.1:9080/graphql",
         "-e", "MESH_API_TOKEN=PASTE_TOKEN_HERE",
-        "kexinlu/mesh-memory:mcp-latest"
+        "kexinlu/mesh-memory:mcp-0.1.1-preview"
       ]
     }
   }
