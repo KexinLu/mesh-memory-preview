@@ -17,13 +17,17 @@ share institutional memory.
 - Claude Code with MCP support
 - 5 minutes
 
-## About the LLM key (required)
+## About the LLM key
 
-Every `write_memory` call routes through an LLM that classifies the note
-(kind, lane, anchors, decay). Without a working provider, writes can't
-be classified.
+Two supported shapes — pick one:
 
-Supported providers (any OpenAI-compatible endpoint works):
+### A. Classifier-backed mode (default, `LLM_PROVIDER=qwen`)
+
+Every `writeMemory` / `writeMemoryAsync` routes through an LLM that
+classifies the note (kind, lane, anchors, decay). The agent sends raw
+notes; the server picks the taxonomy slot. **Requires an API key.**
+
+Any OpenAI-compatible endpoint works:
 
 | Provider | Where to get a key | Base URL |
 |---|---|---|
@@ -31,6 +35,18 @@ Supported providers (any OpenAI-compatible endpoint works):
 | OpenAI | <https://platform.openai.com/> | `https://api.openai.com/v1` |
 | Ollama (local) | run `ollama serve` locally | `http://host.docker.internal:11434/v1` |
 | vLLM (local) | run `vllm serve …` locally | `http://host.docker.internal:8000/v1` |
+
+### B. Agent-as-gate mode (`LLM_PROVIDER=none`)
+
+The server runs **without any classifier**. Only `writeMemoryDirect` is
+available — the calling agent (e.g. Claude Code, via a slash command or
+skill) decides kind/lane/anchors upstream and writes them verbatim.
+`writeMemory` and `writeMemoryAsync` refuse with a clear error. No API
+key required, and the reconcile worker isn't spawned.
+
+Pick this when your agent is already doing the judgment work and you
+don't want a second LLM on the server side. It pairs naturally with
+`/mem-rollup` and custom team skills.
 
 > `LLM_PROVIDER=mock` exists **for mesh-memory's own development only** —
 > it returns dummy classifications. Do not run a team on it.
@@ -51,13 +67,21 @@ cp .env.example .env
 
 ### 2. Configure
 
-Edit `~/.config/mesh-memory/.env` and set at minimum:
+Edit `~/.config/mesh-memory/.env`.
+
+Classifier-backed mode:
 
 ```bash
-LLM_PROVIDER=qwen               # or openai / ollama / vllm
+LLM_PROVIDER=qwen               # or openai-compatible provider
 LLM_MODEL=qwen-plus             # any model your provider serves
 DASHSCOPE_API_KEY=sk-…          # your key
 # DASHSCOPE_BASE_URL=…          # override if not using DashScope
+```
+
+Agent-as-gate mode:
+
+```bash
+LLM_PROVIDER=none               # no key, no classifier, writeMemoryDirect only
 ```
 
 ### 3. Start the stack
@@ -186,6 +210,10 @@ Workflow:
 - **"classification error" on write** — LLM provider isn't reachable.
   Check `DASHSCOPE_API_KEY` and `DASHSCOPE_BASE_URL` in `.env`, then
   `docker compose restart mesh-server`.
+- **"this deployment has no write classifier"** — you're in
+  `LLM_PROVIDER=none` mode. Use `writeMemoryDirect` (the `/mem-this`
+  and `/mem-rollup` starters already do). To switch back, set
+  `LLM_PROVIDER=qwen` + a key and restart.
 - **"graphql response decode" error** — token is invalid. Re-provision
   with `provision-key`.
 - **Connection refused** — `docker compose ps`; is `mesh-server`
