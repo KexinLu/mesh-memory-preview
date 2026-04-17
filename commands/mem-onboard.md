@@ -29,12 +29,18 @@ Before interviewing, do these in order:
 2. **Check existing state.** If the registry already has kinds or
    namespaces, show them to the user and ask whether they want to
    **extend** or **start over**. Do not silently overwrite.
-3. **Remind about the LLM key.** The write path requires a working
-   LLM provider. Ask: "Have you set `DASHSCOPE_API_KEY` (or your
-   provider's key) in `~/.config/mesh-memory/.env` and restarted the
-   stack?" If they're unsure, tell them writes will fail with
-   "classification error" until the key is set. Do not create kinds
-   for a stack that can't actually write.
+3. **Confirm how writes will be classified.** Ask which
+   `LLM_PROVIDER` the stack is running with:
+   - **`qwen`** (default): the server classifies every write. Confirm
+     they've set `DASHSCOPE_API_KEY` (or their provider's key) in
+     `~/.config/mesh-memory/.env` and restarted. Without it, writes
+     fail with "classification error." Do not create kinds for a stack
+     that can't actually write.
+   - **`none`**: agent-as-gate mode — only `writeMemoryDirect` is
+     available. No LLM key is needed, but the calling agent (the
+     customized `/mem-this`) must pick kind/lane/anchors itself.
+   - **`mock`**: flag it as dev-only and suggest switching before
+     provisioning a real taxonomy.
 
 # Concepts to teach (keep it brief)
 
