@@ -111,9 +111,15 @@ For each proposed write, recall against the stable anchor:
 
 ```
 mcp__mem-mcp__recall
-  anchors: [claude_memory:<slug>]
-  limit:   20
+  anchors:   [claude_memory:<slug>]
+  min_trust: 0.01
+  limit:     20
 ```
+
+`min_trust: 0.01` filters out memories the user has explicitly
+`mark_stale`'d (trust = 0). A stale row is an explicit "forget this
+one" signal — re-imports should treat it as absent, not SKIP-block
+the re-run.
 
 Recall returns the **whole supersedes chain** for that slug, not just
 the current entry. Pick the row with `supersededBy == null` — that's
