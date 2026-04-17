@@ -1,22 +1,39 @@
 Template — customize for your team's workflow. This starter walks a
-rollup/promotion pass: collect a cluster of L1/L2 memories, dissect
-them into atomic claims, dedupe against existing L3, and write new or
-superseding L3 memories via `writeMemoryDirect`. The agent does all
-the judgment; the server does not classify. Edit this file to match
-how *your* team decides what's canon.
+rollup/promotion pass: collect a cluster of shorter-lived memories,
+dissect them into atomic claims, dedupe against existing memories at
+the target lane, and write new or superseding memories via
+`writeMemoryDirect`. The agent does all the judgment; the server does
+not classify. Edit this file to match how *your* team decides what's
+canon.
 
 ---
 
+# Shape
+
+Rollup has three conceptual steps — keep them separable in your head
+even though one slash command walks through all three:
+
+1. **Collect** — deterministic: `recall` for the source cluster and
+   the existing memories at the target lane. No judgment.
+2. **Provision** — judgment: dissect the cluster into atomic claims,
+   dedupe against the existing set, draft the writes. Today this is
+   the agent's job. A classifier-backed deployment could in future
+   delegate this to a server worker (briefing-close trigger) — if so,
+   the drafts would still go through a review queue before step 3.
+3. **Commit** — `writeMemoryDirect`. Always the same primitive, for
+   both agent-driven and (future) worker-driven provisioners.
+
 # Goal
 
-Promote valuable short-lived knowledge into canonical memory. Given a
-cluster of L1 scratch / L2 working notes (tied by an anchor, a
-briefing, or a time window), produce:
+Promote valuable shorter-lived knowledge into a longer-lived lane.
+Given a cluster of memories tied by an anchor, a briefing, or a time
+window, produce:
 
-- **new L3 memories** for claims not already covered
-- **supersedes** for existing L3 that new evidence updates
+- **new memories** at the target lane for claims not already covered
+- **supersedes** for existing target-lane memories that new evidence
+  updates
 - **discards** for noise — notes that were useful in the moment but
-  aren't canon-worthy
+  aren't worth promoting
 
 All writes go through `mcp__mem-mcp__write_memory_direct`. This command
 works whether the deployment is classifier-backed or `LLM_PROVIDER=none`.
@@ -28,6 +45,19 @@ works whether the deployment is classifier-backed or `LLM_PROVIDER=none`.
 2. **Taxonomy ready?** If the registry is empty, send the user to
    `/mem-onboard` first — you have nowhere to promote *into*.
 
+# Pick the target lane
+
+Ask the user: promote **to L2 or L3**?
+
+- **Target L3 (default, "canonical rollup"):** source = L1 ∪ L2.
+  Validated findings, discoveries, decisions, and patterns worth
+  keeping long-term. Dedupe against existing L3.
+- **Target L2 ("validate into working notes"):** source = L1 only.
+  Raw findings that have been confirmed enough to survive beyond the
+  current session, but not yet canonical. Dedupe against existing L2.
+
+L2→L2 is not a rollup; skip it. Offer L3 if the user is unsure.
+
 # Pick the grouping signal
 
 Ask the user which cluster they want to roll up. Accept any of:
@@ -36,7 +66,7 @@ Ask the user which cluster they want to roll up. Accept any of:
   `gh:issue/1423`, etc.
 - **Briefing ID:** a closed or closing briefing's UUID. Everything
   tagged to it is a candidate.
-- **Time window:** "everything L1/L2 in the last 7 days" — useful for
+- **Time window:** "everything in the last 7 days" — useful for
   weekly hygiene passes.
 
 If the user doesn't specify, offer the anchor path as default and ask
@@ -47,18 +77,25 @@ which namespace:value they care about.
 Run two recalls. Keep the filters tight — casting too wide makes the
 dissection step noisy.
 
+Use the **source lanes** determined by the target:
+
+| Target | Source lanes |
+|---|---|
+| L3 | `["L1", "L2"]` |
+| L2 | `["L1"]` |
+
 1. **The cluster to promote:**
    ```
    mcp__mem-mcp__recall
      anchors:  [<the chosen anchor>]     # or omit for briefing/window mode
-     lanes:    ["L1", "L2"]
+     lanes:    <source lanes per table above>
      limit:    50                        # raise if the user asks
    ```
-2. **Existing canonical coverage on the same anchor:**
+2. **Existing coverage at the target lane:**
    ```
    mcp__mem-mcp__recall
      anchors: [<the chosen anchor>]
-     lanes:   ["L3"]
+     lanes:   [<target lane>]
      limit:   50
    ```
 
@@ -85,18 +122,19 @@ Group atomic claims by proposed L3 kind (`decision`, `pattern`,
 `constraint`, or whatever your tenant registered). Discard anything
 that's truly ephemeral or already well-covered in L3.
 
-# Dedupe against existing L3
+# Dedupe against existing target-lane memories
 
-For each proposed claim, compare against the L3 list:
+For each proposed claim, compare against the existing target-lane list:
 
 - **Covered and still accurate** → discard (or note as a
   reinforcement). Do not write a duplicate.
-- **Covered but outdated** → propose a *supersedes*: new L3 with
-  `supersedes: <old_l3_id>` in the write.
-- **Not covered** → propose a *new* L3 write.
+- **Covered but outdated** → propose a *supersedes*: new write at the
+  target lane with `supersedes: <old_id>` set.
+- **Not covered** → propose a *new* write at the target lane.
 
-When in doubt, prefer fewer, sharper L3 memories over many thin ones.
-L3 is read more than it's written — noise here hurts recall later.
+When in doubt, prefer fewer, sharper memories over many thin ones.
+Higher lanes are read more than they are written — noise here hurts
+recall later.
 
 # Preview
 
@@ -127,7 +165,7 @@ On confirm, for each NEW / UPDATE entry, call:
 
 ```
 mcp__mem-mcp__write_memory_direct
-  lane:        "L3"
+  lane:        "<target lane>"
   kind:        "<the chosen kind>"
   title:       "<concise, grep-friendly>"
   summary:     "<one or two sentences>"
@@ -142,8 +180,8 @@ isn't registered), stop and ask the user — do not silently skip.
 
 # Verify
 
-After writes, run the L3 recall again and show the user the final
-canonical picture for this anchor. This is the "did we end up in a
+After writes, run the target-lane recall again and show the user the
+final picture for this anchor. This is the "did we end up in a
 sensible place" check.
 
 # Close the loop (optional)
