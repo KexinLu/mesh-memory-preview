@@ -182,14 +182,28 @@ baked-in token. Do **not** expose it on a public network.
 ```bash
 # one-time: fill in VITE_API_TOKEN in the root .env (same file the
 # compose stack reads), then
-cd ui
-npm install
-npm run dev
+make ui            # or: cd ui && npm install && npm run dev
 ```
 
 Opens at <http://localhost:4200>. `vite.config.ts` is set to read
 `.env` from the deploy-kit root (the directory containing
 `docker-compose.yml`), so there's one config file, not two.
+
+## Make shortcuts
+
+A `Makefile` wraps the common flows:
+
+| Target | What it does |
+|---|---|
+| `make help` | List all targets |
+| `make up` | Start compose stack in the background |
+| `make down` | Stop stack (keep data) |
+| `make reset` | Wipe data + restart (destructive) |
+| `make ui` | Run the review UI (foreground) |
+| `make dev` | `make up` then `make ui` in one command |
+| `make logs` | Tail mesh-server logs |
+| `make provision-key LABEL=me ROLE=architect` | Mint an API token |
+| `make ps` | Container status |
 
 ## Design your taxonomy
 
