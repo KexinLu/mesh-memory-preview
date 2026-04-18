@@ -173,6 +173,24 @@ So the new MCP server and commands get picked up.
 
 You should see containers up, server healthy, MCP connected, `0` memories.
 
+## Browse memories in the review UI (optional)
+
+A minimal React UI ships under `ui/` for browsing / filtering memories
+in the browser. Dev-only for now — localhost, no auth beyond the
+baked-in token. Do **not** expose it on a public network.
+
+```bash
+# one-time: fill in VITE_API_TOKEN in the root .env (same file the
+# compose stack reads), then
+cd ui
+npm install
+npm run dev
+```
+
+Opens at <http://localhost:4200>. `vite.config.ts` is set to read
+`.env` from the deploy-kit root (the directory containing
+`docker-compose.yml`), so there's one config file, not two.
+
 ## Design your taxonomy
 
 mesh-memory ships empty. You decide what lives in it.
