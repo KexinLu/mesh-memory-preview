@@ -23,7 +23,7 @@ services:
       retries: 5
 
   mesh-server:
-    image: kexinlu/mesh-memory:server-0.2.0-preview
+    image: kexinlu/mesh-context-server:0.3.0-preview
     depends_on:
       postgres:
         condition: service_healthy
