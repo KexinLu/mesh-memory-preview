@@ -144,20 +144,24 @@ Add to `~/.claude.json`:
         "run", "--rm", "-i", "--network", "host",
         "-e", "MESH_API_URL=http://127.0.0.1:9080/graphql",
         "-e", "MESH_API_TOKEN=PASTE_TOKEN_HERE",
-        "kexinlu/mesh-memory:mcp-0.3.1-preview"
+        "kexinlu/mesh-memory:mcp-0.3.2-preview"
       ]
     }
   }
 }
 ```
 
-Clients that support MCP streamable HTTP can use a long-running endpoint
-instead. Add `MESH_API_TOKEN=PASTE_TOKEN_HERE` to `.env`, start the optional
-profile, then point the client at `http://127.0.0.1:9081/mcp`:
+Clients that support MCP streamable HTTP can use the packaged sidecar instead.
+Add `MESH_API_TOKEN=PASTE_TOKEN_HERE` to `.env`, start the sidecar profile, then
+point clients at `http://127.0.0.1:9081/mcp`:
 
 ```bash
 COMPOSE_PROFILES=mcp-http docker compose up -d
 ```
+
+Multiple HTTP MCP clients can connect concurrently. Each client gets its own
+`mcp-session-id`; sessions are stored in the sidecar process memory, so clients
+should reconnect after a sidecar restart.
 
 ### 6. Install the starter slash commands
 

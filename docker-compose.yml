@@ -25,7 +25,7 @@ services:
       retries: 5
 
   mesh-server:
-    image: kexinlu/mesh-context-server:0.3.1-preview
+    image: kexinlu/mesh-context-server:0.3.2-preview
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,7 +41,7 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
 
   mesh-mcp-http:
-    image: kexinlu/mesh-memory:mcp-0.3.1-preview
+    image: kexinlu/mesh-memory:mcp-0.3.2-preview
     profiles: ["mcp-http"]
     depends_on:
       mesh-server:
