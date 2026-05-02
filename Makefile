@@ -3,7 +3,7 @@
 LABEL ?= my-laptop
 ROLE  ?= architect
 
-.PHONY: help up down reset ui dev logs provision-key ps
+.PHONY: help up up-mcp-http down reset ui dev logs provision-key ps
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -11,6 +11,10 @@ help: ## Show this help
 up: ## Start the compose stack (postgres + mesh-server) in the background
 	docker compose up -d
 	@docker compose ps
+
+up-mcp-http: ## Start stack with the optional streamable HTTP MCP endpoint
+	COMPOSE_PROFILES=mcp-http docker compose up -d
+	@COMPOSE_PROFILES=mcp-http docker compose ps
 
 down: ## Stop the stack (keep data)
 	docker compose down
@@ -22,8 +26,8 @@ reset: ## Stop + wipe data + restart fresh (destructive)
 ps: ## Show container status
 	docker compose ps
 
-logs: ## Tail mesh-server logs
-	docker compose logs -f mesh-server
+logs: ## Tail mesh-server and optional MCP HTTP logs
+	docker compose logs -f mesh-server mesh-mcp-http
 
 provision-key: ## Mint an API token. Args: LABEL=name ROLE=architect|lead|worker
 	docker compose exec mesh-server /mesh-server provision-key --label $(LABEL) --role $(ROLE)

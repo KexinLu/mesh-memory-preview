@@ -4,6 +4,8 @@
 # 3. docker compose up -d
 # 4. docker compose exec mesh-server /mesh-server provision-key --label my-key --role architect
 # 5. Copy the token into your Claude Code MCP config
+# Optional: set MESH_API_TOKEN and run with COMPOSE_PROFILES=mcp-http
+# to expose a streamable HTTP MCP endpoint at /mcp.
 
 services:
   postgres:
@@ -23,7 +25,7 @@ services:
       retries: 5
 
   mesh-server:
-    image: kexinlu/mesh-context-server:0.3.0-preview
+    image: kexinlu/mesh-context-server:0.3.1-preview
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,6 +38,21 @@ services:
       LLM_MODEL: ${LLM_MODEL:-qwen-plus}
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
       DASHSCOPE_BASE_URL: ${DASHSCOPE_BASE_URL:-}
+      RUST_LOG: ${RUST_LOG:-info}
+
+  mesh-mcp-http:
+    image: kexinlu/mesh-memory:mcp-0.3.1-preview
+    profiles: ["mcp-http"]
+    depends_on:
+      mesh-server:
+        condition: service_started
+    ports:
+      - "${MESH_MCP_PORT:-9081}:9081"
+    environment:
+      MESH_API_URL: http://mesh-server:9080/graphql
+      MESH_API_TOKEN: ${MESH_API_TOKEN:-}
+      MESH_MCP_TRANSPORT: http
+      MESH_MCP_BIND: 0.0.0.0:9081
       RUST_LOG: ${RUST_LOG:-info}
 
 volumes:

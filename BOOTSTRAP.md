@@ -37,7 +37,10 @@ Key points `mem-setup.md` will walk you through:
 - `.env` bootstrap (pick classifier-backed vs agent-as-gate mode)
 - `docker compose up -d`
 - `provision-key` — surface the token to the user in a copy-friendly box
-- Print the MCP bridge JSON snippet with the token substituted
+- Print the stdio MCP bridge JSON snippet with the token substituted
+- If the user wants streamable HTTP MCP, set `MESH_API_TOKEN` in `.env`,
+  start `COMPOSE_PROFILES=mcp-http docker compose up -d`, and use
+  `http://127.0.0.1:9081/mcp`
 - `cp commands/*.md ~/.claude/commands/`
 - Tell the user to restart Claude Code
 

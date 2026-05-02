@@ -74,10 +74,15 @@ All subsequent commands run from inside that directory.
       "run", "--rm", "-i", "--network", "host",
       "-e", "MESH_API_URL=http://127.0.0.1:9080/graphql",
       "-e", "MESH_API_TOKEN=<the-token-from-step-3>",
-      "kexinlu/mesh-memory:mcp-0.1.1-preview"
+      "kexinlu/mesh-memory:mcp-0.3.1-preview"
     ]
   }
   ```
+
+- If the user wants streamable HTTP MCP instead of stdio, tell them to
+  add `MESH_API_TOKEN=<the-token-from-step-3>` to `.env`, run
+  `COMPOSE_PROFILES=mcp-http docker compose up -d`, and configure their
+  MCP client URL as `http://127.0.0.1:9081/mcp`.
 
 - Tell the user: open `~/.claude.json`, locate the `mcpServers`
   object (create it if missing), and paste this block in. Do **not**

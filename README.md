@@ -144,11 +144,19 @@ Add to `~/.claude.json`:
         "run", "--rm", "-i", "--network", "host",
         "-e", "MESH_API_URL=http://127.0.0.1:9080/graphql",
         "-e", "MESH_API_TOKEN=PASTE_TOKEN_HERE",
-        "kexinlu/mesh-memory:mcp-latest"
+        "kexinlu/mesh-memory:mcp-0.3.1-preview"
       ]
     }
   }
 }
+```
+
+Clients that support MCP streamable HTTP can use a long-running endpoint
+instead. Add `MESH_API_TOKEN=PASTE_TOKEN_HERE` to `.env`, start the optional
+profile, then point the client at `http://127.0.0.1:9081/mcp`:
+
+```bash
+COMPOSE_PROFILES=mcp-http docker compose up -d
 ```
 
 ### 6. Install the starter slash commands
